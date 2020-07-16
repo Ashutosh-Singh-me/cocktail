@@ -1,4 +1,5 @@
 document.getElementById('form').addEventListener('submit', searchRecipe);
+document.getElementById('random').addEventListener('click', searchRandom);
 var div = document.getElementById('container');
 var displayDataContainer = '';
 
@@ -7,6 +8,11 @@ function searchRecipe(e) {
     const API = 'https://www.thecocktaildb.com/api/json/v1/1/search.php?s=';
     var search = document.getElementById('CocktailName').value;
 
+    if (!search){
+        alert('can\'t be empty');
+        return 0;
+    }
+
     fetch(API + search)
     .then( function(rsp) {
         if (!rsp.ok)
@@ -14,14 +20,12 @@ function searchRecipe(e) {
         return rsp.json()
     } )
     .then( function(data)  {
-        console.log(data);
-        if (data.drinks === null) {
-            alert('Text cant be empty.');////console.log('Null error'); //// can't find drink
-            return;
+        if (data.drinks == null){
+            alert('not a actual cocktail');
+            return 0;
         }
-        else
         if (data.drinks[0].strDrink !== capitalizeFirstLetter(search)){
-            alert('Search a valid cocktail or try a random one.'); //// can't match drink
+            alert('Search a valid cocktail or try a new one.'); //// can't match drink
             return;
         }
         distributeData(data.drinks[0]);
@@ -32,6 +36,19 @@ function searchRecipe(e) {
     })
 }
 
+function searchRandom() {
+    const API = 'https://www.thecocktaildb.com/api/json/v1/1/random.php';
+    fetch(API)
+    .then( function(rsp){
+        return rsp.json();
+    })
+    .then( function(data){
+        distributeData(data.drinks[0]);
+        displayData();
+    })
+}
+
+
 function distributeData(data) {
     cocktailDetails( data.strDrink, data.strCategory, data.strInstructions );
     displayImage(data.strDrinkThumb);
@@ -39,33 +56,35 @@ function distributeData(data) {
 }
 
 function cocktailDetails(name, category, instructions) {
-    let header = `
+    let header = `<div class="row" id="output">
+    <div class="col-lg-6">
         <ul type="none" class="list">
         <li><span class="list-heading">Name</span> : ${name}</li>
         <li><span class="list-heading">Category</span> : ${category}</li>
         <li><span class="list-heading">Instruction</span> : ${instructions}</li>
         </ul>
+        </div>
     `;
     displayDataContainer += header;
 
 }
 
 function displayImage(image){
-    let disp = `
-        <img src=${image} alt="Drink Image" class="image">
+    let disp = `<div class="col-lg-6 alignment" >
+        <img src=${image} alt="Drink Image">
+        </div>
+        </div>
     `;
     displayDataContainer += disp;
 }
 
-function ingredients(data) { //strIngredient1
-    let disp = `
+function ingredients(data) { 
+    let disp = `<div class="container-fluid">
     <table class="table">
+    
     <tr>
-    <th colspan="2">Recipe</th>
-    </tr>
-    <tr>
-        <td>Ingredient</td>
-        <td>ounces</td>
+        <th>Ingredient</th>
+        <th>ounces</th>
     </tr>
     <tr>
         <td>${data.strIngredient1}</td>
@@ -129,22 +148,25 @@ function ingredients(data) { //strIngredient1
     </tr>
     `;
     
-    disp += '</table>';
-
-
+    disp += `</table>
+            </div>`;
     displayDataContainer += disp;
-
 }
 
 function displayData() {
     
-    div.innerHTML ='<div id="output">' + displayDataContainer + '</div>';
+    div.innerHTML = displayDataContainer; //'<div class="row" id="output">'
     displayDataContainer = "";
 }
 
-function capitalizeFirstLetter(text) {
-    var a = text.slice(0,1);
-    var b = text.slice(1,text.length);
+function capitalizeFirstLetter(str) {
+    if (!str)
+    return 0;
+    str = str.split(" ");
 
-    return a.toUpperCase() + b.toLowerCase();
+    for (var i = 0, x = str.length; i < x; i++) {
+        str[i] = str[i][0].toUpperCase() + str[i].substr(1);
+    }
+
+    return str.join(" ");
 }
